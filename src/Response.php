@@ -1,5 +1,5 @@
 <?php
-namespace Socket;
+namespace Naka507\Socket;
 class Response
 {
     public $buffer;

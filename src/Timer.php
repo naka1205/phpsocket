@@ -1,5 +1,5 @@
 <?php
-namespace Socket;
+namespace Naka507\Socket;
 use Exception;
 class Timer
 {
@@ -14,7 +14,7 @@ class Timer
             self::$_event = $event;
         } else {
             if (function_exists('pcntl_signal')) {
-                pcntl_signal(SIGALRM, array('\Socket\Timer', 'signalHandle'), false);
+                pcntl_signal(SIGALRM, array('\Naka507\Socket\Timer', 'signalHandle'), false);
             }
         }
     }

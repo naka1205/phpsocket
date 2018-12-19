@@ -5,7 +5,7 @@ require __DIR__ . '/../vendor/autoload.php';
 define('OS_TYPE_LINUX', 'linux');
 define('OS_TYPE_WINDOWS', 'windows');
 
-use Socket\Server;
+use Naka507\Socket\Server;
 $server = new Server();
 
 // Emitted when new connection come

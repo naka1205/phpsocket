@@ -1,5 +1,5 @@
 <?php
-namespace Socket;
+namespace Naka507\Socket;
 
 class Server {
     public static $_OS = OS_TYPE_LINUX;
