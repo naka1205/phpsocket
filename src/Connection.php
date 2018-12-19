@@ -4,7 +4,6 @@ use Exception;
 
 class Connection
 {
-
     const READ_BUFFER_SIZE = 65535;
     const STATUS_INITIAL = 0;
     const STATUS_CONNECTING = 1;

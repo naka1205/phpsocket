@@ -1,10 +1,6 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
-// Define OS Type
-define('OS_TYPE_LINUX', 'linux');
-define('OS_TYPE_WINDOWS', 'windows');
-
 use Naka507\Socket\Server;
 $server = new Server();
 

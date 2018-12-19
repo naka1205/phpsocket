@@ -2,7 +2,10 @@
 namespace Naka507\Socket;
 
 class Server {
-    public static $_OS = OS_TYPE_LINUX;
+    const OS_TYPE_LINUX = 'linux';
+    const OS_TYPE_WINDOWS = 'windows';
+
+    public static $_OS = 'linux';
     public static $event = null;
     public static $_gracefulStop = false;
     public static $_outputStream = null;
@@ -29,7 +32,7 @@ class Server {
         }
 
         if ( DIRECTORY_SEPARATOR === '\\' ) {
-            Server::$_OS = OS_TYPE_WINDOWS;
+            Server::$_OS = Server::OS_TYPE_WINDOWS;
         }
 
 	}
@@ -126,7 +129,7 @@ class Server {
             Server::console($msg);
         }
         file_put_contents((string)Server::$logFile, date('Y-m-d H:i:s') . ' ' . 'pid:'
-            . (Server::$_OS === OS_TYPE_LINUX ? posix_getpid() : 1) . ' ' . $msg, FILE_APPEND | LOCK_EX);
+            . (Server::$_OS === Server::OS_TYPE_LINUX ? posix_getpid() : 1) . ' ' . $msg, FILE_APPEND | LOCK_EX);
     }
 
     public static function console($msg, $decorated = false)
@@ -167,7 +170,7 @@ class Server {
             Server::$_outputDecorated = false;
         } else {
             Server::$_outputDecorated =
-                Server::$_OS === OS_TYPE_LINUX &&
+                Server::$_OS === Server::OS_TYPE_LINUX &&
                 function_exists('posix_isatty') &&
                 posix_isatty($stream);
         }
