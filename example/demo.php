@@ -4,19 +4,19 @@ require __DIR__ . '/../vendor/autoload.php';
 use Naka507\Socket\Server;
 $server = new Server();
 
-// Emitted when new connection come
+//服务启动
 $server->onWorkerStart = function($connection)
 {
     echo "New onWorkerStart\n";
 };
 
-// Emitted when new connection come
+//建立连接
 $server->onConnect = function($connection)
 {
     echo "New Connection\n";
 };
 
-// Emitted when data received
+//接受请求
 $server->onMessage = function($request, $response)
 {
     $response->write(' Hello World !!!');
