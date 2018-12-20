@@ -22,6 +22,7 @@ class Request
         Http::$instance = new Http();
         // $_SERVER
         $_SERVER = array(
+            'SCRIPT_NAME'         => '',
             'QUERY_STRING'         => '',
             'REQUEST_METHOD'       => '',
             'REQUEST_URI'          => '',
