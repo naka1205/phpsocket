@@ -1,6 +1,6 @@
 PHPSocket 
 =================
-基于[Workerman](https://github.com/walkor/Workerman) 改写的轻量级版。
+基于[Workerman](https://github.com/walkor/Workerman) 改写的简化版。
 用于开发基于 Socket 的 HTTP Server
 
 安装
