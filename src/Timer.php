@@ -36,7 +36,7 @@ class Timer
 
         if (self::$_event) {
             return self::$_event->add($time_interval,
-                $persistent ? EventInterface::EV_TIMER : EventInterface::EV_TIMER_ONCE, $func, $args);
+                $persistent ? Events::EV_TIMER : Events::EV_TIMER_ONCE, $func, $args);
         }
 
         if (!is_callable($func)) {
@@ -89,7 +89,7 @@ class Timer
     public static function del($timer_id)
     {
         if (self::$_event) {
-            return self::$_event->del($timer_id, EventInterface::EV_TIMER);
+            return self::$_event->del($timer_id, Events::EV_TIMER);
         }
 
         return false;

@@ -164,7 +164,7 @@ class Connection
                 }
                 $this->_sendBuffer = $send_buffer;
             }
-            Server::$event->add($this->_socket, EventInterface::EV_WRITE, array($this, 'write'));
+            Server::$event->add($this->_socket, Events::EV_WRITE, array($this, 'write'));
             // Check if the send buffer will be full.
             $this->checkBufferWillFull();
             return null;
@@ -253,16 +253,16 @@ class Connection
         return strpos($this->getRemoteIp(), ':') !== false;
     }
 
-    public function pauseRecv()
+    public function pause()
     {
-        Server::$event->del($this->_socket, EventInterface::EV_READ);
+        Server::$event->del($this->_socket, Events::EV_READ);
         $this->_isPaused = true;
     }
 
-    public function resumeRecv()
+    public function resume()
     {
         if ($this->_isPaused === true) {
-            Server::$event->add($this->_socket, EventInterface::EV_READ, array($this, 'read'));
+            Server::$event->add($this->_socket, Events::EV_READ, array($this, 'read'));
             $this->_isPaused = false;
             $this->read($this->_socket, false);
         }
@@ -275,7 +275,7 @@ class Connection
             if ($this->doSslHandshake($socket)) {
                 $this->_sslHandshakeCompleted = true;
                 if ($this->_sendBuffer) {
-                    Server::$event->add($socket, EventInterface::EV_WRITE, array($this, 'write'));
+                    Server::$event->add($socket, Events::EV_WRITE, array($this, 'write'));
                 }
             } else {
                 return;
@@ -479,10 +479,10 @@ class Connection
             $dest->destroy();
         };
         $dest->onBufferFull  = function ($dest) use ($source) {
-            $source->pauseRecv();
+            $source->pause();
         };
         $dest->onBufferDrain = function ($dest) use ($source) {
-            $source->resumeRecv();
+            $source->resume();
         };
     }
 
@@ -504,7 +504,7 @@ class Connection
         if ($this->_sendBuffer === '') {
             $this->destroy();
         } else {
-            $this->pauseRecv();
+            $this->pause();
         }
     }
 
