@@ -15,6 +15,7 @@ class Request
     public function __construct(Connection $connection, $buffer)
     {
         $this->connection = $connection;
+        $this->header = [];
         $_POST = $_GET = $_COOKIE = $_REQUEST = $_SESSION = $_FILES = array();
         $GLOBALS['HTTP_RAW_POST_DATA'] = '';
         // Clear cache.
@@ -51,6 +52,11 @@ class Request
 
         $http_post_boundary = '';
         unset($header_data[0]);
+
+        $this->header['REQUEST_METHOD'] = $_SERVER['REQUEST_METHOD'];
+        $this->header['REQUEST_URI'] = $_SERVER['REQUEST_URI'];
+        $this->header['SERVER_PROTOCOL'] = $_SERVER['SERVER_PROTOCOL'];
+        
         foreach ($header_data as $content) {
             // \r\n\r\n
             if (empty($content)) {
@@ -60,6 +66,7 @@ class Request
             $key                     = str_replace('-', '_', strtoupper($key));
             $value                   = trim($value);
             $_SERVER['HTTP_' . $key] = $value;
+            $this->header[$key] = $value;
             switch ($key) {
                 // HTTP_HOST
                 case 'HOST':
@@ -101,7 +108,7 @@ class Request
             if (isset($_SERVER['CONTENT_TYPE'])) {
                 switch ($_SERVER['CONTENT_TYPE']) {
                     case 'multipart/form-data':
-                        self::parseUploadFiles($http_body, $http_post_boundary);
+                        Http::parseUploadFiles($http_body, $http_post_boundary);
                         break;
                     case 'application/json':
                         $_POST = json_decode($http_body, true);
@@ -148,7 +155,6 @@ class Request
         $_SERVER['REMOTE_ADDR'] = $connection->getRemoteIp();
         $_SERVER['REMOTE_PORT'] = $connection->getRemotePort();
 
-        $this->header = array_change_key_case ( $header_data ,  CASE_LOWER );
         $this->server = array_change_key_case ( $_SERVER ,  CASE_LOWER );
         $this->cookie = array_change_key_case ( $_COOKIE ,  CASE_LOWER );
         $this->request = array_change_key_case ( $_REQUEST ,  CASE_LOWER );
