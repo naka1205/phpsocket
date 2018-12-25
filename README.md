@@ -31,7 +31,7 @@ $server->onConnect = function($connection)
     echo "New Connection\n";
 };
 
-//接受请求
+//接收请求
 $server->onMessage = function($request, $response)
 {
     $response->write(' Hello World !!!');
