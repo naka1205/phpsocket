@@ -39,7 +39,7 @@ class Response
             $content = gzencode($content,$connection->gzip);
         }
         // header
-        $header .= "Server: web \r\nContent-Length: " . strlen($content) . "\r\n\r\n";
+        $header .= "Server: HTTP Server \r\nContent-Length: " . strlen($content) . "\r\n\r\n";
 
         // save session
         Http::sessionWriteClose();
@@ -49,7 +49,7 @@ class Response
     }
 
     public function header($name,$value){
-        Http::$header[$name] = $value;
+        Http::$header[$name] = "$name : $value" ;
     }   
 
     public function status($code){
