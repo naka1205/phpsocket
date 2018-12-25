@@ -108,7 +108,7 @@ class Request
             if (isset($_SERVER['CONTENT_TYPE'])) {
                 switch ($_SERVER['CONTENT_TYPE']) {
                     case 'multipart/form-data':
-                        Http::parseUploadFiles($http_body, $http_post_boundary);
+                        self::parseUploadFiles($http_body, $http_post_boundary);
                         break;
                     case 'application/json':
                         $_POST = json_decode($http_body, true);
@@ -163,4 +163,50 @@ class Request
         $this->files = array_change_key_case ( $_FILES ,  CASE_LOWER );
         $this->session = array_change_key_case ( $_SESSION ,  CASE_LOWER );
     }
+
+    protected static function parseUploadFiles($http_body, $http_post_boundary)
+    {
+        $http_body           = substr($http_body, 0, strlen($http_body) - (strlen($http_post_boundary) + 4));
+        $boundary_data_array = explode($http_post_boundary . "\r\n", $http_body);
+        if ($boundary_data_array[0] === '') {
+            unset($boundary_data_array[0]);
+        }
+        $key = -1;
+        foreach ($boundary_data_array as $boundary_data_buffer) {
+            list($boundary_header_buffer, $boundary_value) = explode("\r\n\r\n", $boundary_data_buffer, 2);
+            // Remove \r\n from the end of buffer.
+            $boundary_value = substr($boundary_value, 0, -2);
+            $key ++;
+            foreach (explode("\r\n", $boundary_header_buffer) as $item) {
+                list($header_key, $header_value) = explode(": ", $item);
+                $header_key = strtolower($header_key);
+                switch ($header_key) {
+                    case "content-disposition":
+                        // Is file data.
+                        if (preg_match('/name="(.*?)"; filename="(.*?)"$/', $header_value, $match)) {
+                            // Parse $_FILES.
+                            $_FILES[$key] = array(
+                                'name' => $match[1],
+                                'file_name' => $match[2],
+                                'file_data' => $boundary_value,
+                                'file_size' => strlen($boundary_value),
+                            );
+                            continue 2;
+                        } // Is post field.
+                        else {
+                            // Parse $_POST.
+                            if (preg_match('/name="(.*?)"$/', $header_value, $match)) {
+                                $_POST[$match[1]] = $boundary_value;
+                            }
+                        }
+                        break;
+                    case "content-type":
+                        // add file_type
+                        $_FILES[$key]['file_type'] = trim($header_value);
+                        break;
+                }
+            }
+        }
+    }
+
 }
