@@ -81,7 +81,7 @@ class Response
         return isset($_SESSION[$name]) ? $_SESSION[$name] : null;
     }
 
-    public function clearCSession(){
+    public function clearSession(){
         $_SESSION = [];
         file_put_contents(Http::$instance->sessionFile, '');
     }
