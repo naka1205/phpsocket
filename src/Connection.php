@@ -54,9 +54,9 @@ class Connection
 
     public function __call($name, $arguments) {
         // Try to emit custom function within protocol
-        if (method_exists($this->protocol, $name)) {
+        if (method_exists("\Naka507\Socket\Http", $name)) {
             try {
-                return call_user_func(array($this->protocol, $name), $this, $arguments);
+                return call_user_func(array("\Naka507\Socket\Http", $name), $this, $arguments);
             } catch (\Exception $e) {
                 Server::log($e);
                 exit(250);

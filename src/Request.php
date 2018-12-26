@@ -11,6 +11,7 @@ class Request
     public $get;
     public $files;
     public $session;
+    public $rawdata;
 
     public function __construct(Connection $connection, $buffer)
     {
@@ -133,6 +134,7 @@ class Request
 
         // HTTP_RAW_REQUEST_DATA HTTP_RAW_POST_DATA
         $GLOBALS['HTTP_RAW_REQUEST_DATA'] = $GLOBALS['HTTP_RAW_POST_DATA'] = $http_body;
+        $this->rawdata = $GLOBALS['HTTP_RAW_REQUEST_DATA'];
 
         // QUERY_STRING
         $_SERVER['QUERY_STRING'] = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
@@ -161,7 +163,14 @@ class Request
         $this->post = array_change_key_case ( $_POST ,  CASE_LOWER );
         $this->get = array_change_key_case ( $_GET ,  CASE_LOWER );
         $this->files = array_change_key_case ( $_FILES ,  CASE_LOWER );
+        
+        Http::sessionStart();
+
         $this->session = array_change_key_case ( $_SESSION ,  CASE_LOWER );
+    }
+
+    public function rawContent(){
+        return $this->rawdata;
     }
 
     protected static function parseUploadFiles($http_body, $http_post_boundary)

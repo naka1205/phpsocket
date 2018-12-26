@@ -56,6 +56,36 @@ class Response
         Http::$header['Http-Code'] = "HTTP/1.1 $code " . Http::$codes[$code];
     }
 
+    public function setCookie($name, $value = '', $maxage = 0, $path = '', $domain = '', $secure = false, $HTTPOnly = false){
+        return Http::setcookie($name, $value, $maxage, $path, $domain, $secure, $HTTPOnly);
+    }
+
+    public function getCookie($name){
+        return isset($_COOKIE[$name]) ? $_COOKIE[$name] : null;
+    }
+
+    public function clearCookie(){
+        foreach ( $_COOKIE as $key => $value) {
+            if ( $key == "PHPSESSID") {
+                continue;
+            }
+            Http::setcookie($key, '', -1 );
+        }
+    }
+
+    public function setSession($name,$value){
+        $_SESSION[$name] = $value;
+    }
+
+    public function getSession($name){
+        return isset($_SESSION[$name]) ? $_SESSION[$name] : null;
+    }
+
+    public function clearCSession(){
+        $_SESSION = [];
+        file_put_contents(Http::$instance->sessionFile, '');
+    }
+
     public function end(){
         $this->connection->send($this->buffer);
     }
