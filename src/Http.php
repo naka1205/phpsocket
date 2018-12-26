@@ -260,7 +260,7 @@ class Http
         }
         Http::$instance->sessionStarted = true;
         // Generate a SID.
-        if (!isset($_COOKIE[Http::$sessionName]) || !is_file(Http::$sessionPath . '/sess_' . $_COOKIE[Http::$sessionName])) {
+        if (!isset( $_COOKIE[Http::$sessionName]) || !is_file( realpath(Http::$sessionPath . '/sess_' . $_COOKIE[Http::$sessionName]) ) ) {
             // Create a unique session_id and the associated file name.
             while (true) {
                 $session_id = static::sessionCreateId();
@@ -278,7 +278,7 @@ class Http
             );
         }
         if (!Http::$instance->sessionFile) {
-            Http::$instance->sessionFile = Http::$sessionPath . '/sess_' . $_COOKIE[Http::$sessionName];
+            Http::$instance->sessionFile = realpath(Http::$sessionPath . '/sess_' . $_COOKIE[Http::$sessionName]) ;
         }
         // Read session from session file.
         if (Http::$instance->sessionFile) {

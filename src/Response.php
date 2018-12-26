@@ -56,7 +56,7 @@ class Response
         Http::$header['Http-Code'] = "HTTP/1.1 $code " . Http::$codes[$code];
     }
 
-    public function setCookie($name, $value = '', $maxage = 0, $path = '', $domain = '', $secure = false, $HTTPOnly = false){
+    public function setCookie($name, $value = '', $maxage = 0, $path = '/', $domain = '', $secure = false, $HTTPOnly = false){
         return Http::setcookie($name, $value, $maxage, $path, $domain, $secure, $HTTPOnly);
     }
 
@@ -69,7 +69,7 @@ class Response
             if ( $key == "PHPSESSID") {
                 continue;
             }
-            Http::setcookie($key, '', -1 );
+            Http::setcookie($key, '', -1 ,'/');
         }
     }
 
