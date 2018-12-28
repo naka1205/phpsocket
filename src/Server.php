@@ -6,24 +6,32 @@ class Server {
     const OS_TYPE_WINDOWS = 'windows';
 
     public static $_OS = 'linux';
-    public static $event = null;
-    public static $_gracefulStop = false;
     public static $_outputStream = null;
     public static $_outputDecorated = false;
-	public $socket;
+    public static $event = null;
+    public static $daemonize = false;
+    public static $pidFile = '';
+    public static $_startFile = '';
+
 	public $protocol;
 	public $transport;
 	public $onWorkerStart;
+	public $onWorkerStop;
 	public $onMessage;
 	public $onClose;
 	public $onError;
 	public $onBufferDrain;
-	public $onBufferFull;
+    public $onBufferFull;
+
+    protected $_socket = null;
+    protected $_pause = true;
+    
+
 	function __construct($port = 8000) {
         Http::init();
 		$this->port = $port;
 		$this->protocol = 'Http';
-        $this->socket = null;
+        $this->_socket = null;
         $this->onMessage = $this->onClose = $this->onError = $this->onBufferDrain = $this->onBufferFull = null;
 
         // Only for cli.
@@ -42,17 +50,25 @@ class Server {
         
 		$errno = 0;
 		$errmsg = '';
-		$this->socket = stream_socket_server($local_socket, $errno, $errmsg);
-		if (!$this->socket) {
+		$this->_socket = stream_socket_server($local_socket, $errno, $errmsg);
+		if (!$this->_socket) {
 			throw new Exception($errmsg);
-		}
-		stream_set_blocking($this->socket, 0);
+        }
+
+        $backtrace        = debug_backtrace();
+        Server::$_startFile = $backtrace[count($backtrace) - 1]['file'];
+        $unique_prefix = str_replace('/', '_', Server::$_startFile);
+        if (empty(Server::$pidFile)) {
+            Server::$pidFile = __DIR__ . "/../$unique_prefix.pid";
+        }
+
+		stream_set_blocking($this->_socket, 0);
 
 		if (!Server::$event) {
             Server::$event = new Events();
 		}
 
-		Server::$event->add($this->socket, Events::EV_READ, array($this, 'accept'));
+		Server::$event->add($this->_socket, Events::EV_READ, array($this, 'accept'));
 
 		Timer::init(Server::$event);
 		
@@ -77,6 +93,11 @@ class Server {
             }
         }
 
+        if ( Server::$_OS == Server::OS_TYPE_LINUX ) {
+            Server::$daemonize = true;
+            Server::init();
+        }
+        
 		Server::$event->loop();
 	}
 
@@ -108,18 +129,98 @@ class Server {
             try {
                 call_user_func($this->onConnect, $connection);
             } catch (\Exception $e) {
-                static::log($e);
+                Server::log($e);
                 exit(250);
             } catch (\Error $e) {
-                static::log($e);
+                Server::log($e);
                 exit(250);
             }
         }
     }
 
-    public static function getGracefulStop()
+    public function pause()
     {
-        return Server::$_gracefulStop;
+        if (Server::$event && false === $this->_pause && $this->_socket) {
+            Server::$event->del($this->_socket, Events::EV_READ);
+            $this->_pause = true;
+        }
+    }
+
+    public function stop()
+    {
+        // Try to emit onWorkerStop callback.
+        if ($this->onWorkerStop) {
+            try {
+                call_user_func($this->onWorkerStop, $this);
+            } catch (\Exception $e) {
+                Server::log($e);
+                exit(250);
+            } catch (\Error $e) {
+                Server::log($e);
+                exit(250);
+            }
+        }
+        // Remove listener for server socket.
+        $this->pause();
+        if ($this->_socket) {
+            set_error_handler(function(){});
+            fclose($this->_socket);
+            restore_error_handler();
+            $this->_socket = null;
+        }
+        // Close all connections for the worker.
+        foreach ($this->connections as $connection) {
+            $connection->close();
+        }
+        // Clear callback.
+        $this->onMessage = $this->onClose = $this->onError = $this->onBufferDrain = $this->onBufferFull = null;
+    }
+
+    public static function command(){
+        if (Server::$_OS !== Server::OS_TYPE_LINUX ) {
+            return;
+        }
+        global $argv;
+
+        $command  = trim($argv[1]);
+
+        // Get master process PID.
+        $master_pid      = is_file(Server::$pidFile) ? file_get_contents(Server::$pidFile) : 0;
+
+        switch ($command) {
+            case 'stop':
+                $master_pid && posix_kill($master_pid, SIGINT);
+                break;
+            default :
+                break;
+        }
+    }
+
+    public static function init()
+    {
+		$pid = pcntl_fork();
+		if ($pid == -1) {
+			throw new Exception('fork子进程失败');
+		} elseif ($pid > 0) {
+			exit(0);
+		}
+		
+		$sid = posix_setsid();
+		if ($sid == -1) {
+			throw new Exception('setsid fail');
+		}
+		
+		chdir('/');
+		
+		$pid = pcntl_fork();
+		if ($pid == -1) {
+			throw new Exception('fork子进程失败');
+		} elseif ($pid > 0) {
+			exit(0);
+		}
+		fclose(STDIN);
+		fclose(STDOUT);
+		fclose(STDERR);
     }
 
     public static function log($msg)
