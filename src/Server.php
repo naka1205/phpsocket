@@ -206,7 +206,7 @@ class Server {
         $master_pid = posix_getpid();
 
         if (false === file_put_contents(Server::$pidFile, $master_pid)) {
-            throw new Exception('can not save pid to ' . Server::$pidFile);
+            throw new \Exception('can not save pid to ' . Server::$pidFile);
         }
     }
 
@@ -214,21 +214,21 @@ class Server {
     {
 		$pid = pcntl_fork();
 		if ($pid == -1) {
-			throw new Exception('fork子进程失败');
+			throw new \Exception('fork子进程失败');
 		} elseif ($pid > 0) {
 			exit(0);
 		}
 		
 		$sid = posix_setsid();
 		if ($sid == -1) {
-			throw new Exception('setsid fail');
+			throw new \Exception('setsid fail');
 		}
 		
 		chdir('/');
 		
 		$pid = pcntl_fork();
 		if ($pid == -1) {
-			throw new Exception('fork子进程失败');
+			throw new \Exception('fork子进程失败');
 		} elseif ($pid > 0) {
 			exit(0);
 		}

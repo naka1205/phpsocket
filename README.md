@@ -40,3 +40,22 @@ $server->onMessage = function($request, $response)
 $server->start();
 
 ```
+### WINDOWS
+```
+php app.php
+```
+### LINUX
+DEBUG 模式 （默认）
+```
+php app.php
+```
+守护进程
+```
+php app.php -d
+```
+关闭进程
+```
+php app.php -s
+```
+### 浏览器访问
+http://127.0.0.1:8000
