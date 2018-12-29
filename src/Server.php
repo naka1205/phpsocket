@@ -12,7 +12,7 @@ class Server {
     public static $_startFile = '';
     public static $_daemonize = false;
     public static $event = null;
-    public static $pidFile = '';
+    public static $pidFile = "";
 
 	public $protocol;
 	public $transport;
@@ -29,6 +29,7 @@ class Server {
     
 
 	function __construct($port = 8000) {
+        Server::init();
         Http::init();
 		$this->port = $port;
 		$this->protocol = 'Http';
@@ -47,6 +48,9 @@ class Server {
 	}
 
 	public function start(){
+
+        Server::command();
+
 		$local_socket = "tcp://0.0.0.0:".$this->port;
         
 		$errno = 0;
@@ -54,13 +58,6 @@ class Server {
 		$this->_socket = stream_socket_server($local_socket, $errno, $errmsg);
 		if (!$this->_socket) {
 			throw new Exception($errmsg);
-        }
-
-        $backtrace        = debug_backtrace();
-        Server::$_startFile = $backtrace[count($backtrace) - 1]['file'];
-        $unique_prefix = str_replace('/', '_', Server::$_startFile);
-        if (empty(Server::$pidFile)) {
-            Server::$pidFile = __DIR__ . "/../$unique_prefix.pid";
         }
 
 		stream_set_blocking($this->_socket, 0);
@@ -94,11 +91,6 @@ class Server {
             }
         }
 
-        if ( Server::$_OS == Server::OS_TYPE_LINUX ) {
-            Server::$_daemonize = true;
-            Server::daemonize();
-        }
-        
 		Server::$event->loop();
 	}
 
@@ -177,6 +169,14 @@ class Server {
         $this->onMessage = $this->onClose = $this->onError = $this->onBufferDrain = $this->onBufferFull = null;
     }
 
+    public static function init(){
+
+        if( empty(Server::$pidFile ) ){
+            Server::$pidFile = getcwd() . "/server.pid";
+        }
+        
+    }
+
     public static function getGracefulStop(){
         return static::$_gracefulStop;
     }
@@ -186,18 +186,27 @@ class Server {
             return;
         }
         global $argv;
-
-        $command  = trim($argv[1]);
+        $command  = isset($argv[1]) ? trim($argv[1]) : '';
 
         // Get master process PID.
         $master_pid      = is_file(Server::$pidFile) ? file_get_contents(Server::$pidFile) : 0;
 
         switch ($command) {
-            case 'stop':
+            case '-s':
                 $master_pid && posix_kill($master_pid, SIGINT);
+                exit(0);
+                break;
+            case '-d':
+                Server::daemonize();
                 break;
             default :
                 break;
+        }
+
+        $master_pid = posix_getpid();
+
+        if (false === file_put_contents(Server::$pidFile, $master_pid)) {
+            throw new Exception('can not save pid to ' . Server::$pidFile);
         }
     }
 
