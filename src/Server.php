@@ -197,9 +197,11 @@ class Server {
                 exit(0);
                 break;
             case '-d':
+                Server::console("Start success.\nInput \"php $argv[0] -s\" to stop.\n");
                 Server::daemonize();
                 break;
             default :
+                Server::console("Start success.\nPress Ctrl+C to stop.\n");
                 break;
         }
 
