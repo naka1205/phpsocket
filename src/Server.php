@@ -8,10 +8,11 @@ class Server {
     public static $_OS = 'linux';
     public static $_outputStream = null;
     public static $_outputDecorated = false;
-    public static $event = null;
-    public static $daemonize = false;
-    public static $pidFile = '';
+    public static $_gracefulStop = false;
     public static $_startFile = '';
+    public static $_daemonize = false;
+    public static $event = null;
+    public static $pidFile = '';
 
 	public $protocol;
 	public $transport;
@@ -94,8 +95,8 @@ class Server {
         }
 
         if ( Server::$_OS == Server::OS_TYPE_LINUX ) {
-            Server::$daemonize = true;
-            Server::init();
+            Server::$_daemonize = true;
+            Server::daemonize();
         }
         
 		Server::$event->loop();
@@ -176,6 +177,10 @@ class Server {
         $this->onMessage = $this->onClose = $this->onError = $this->onBufferDrain = $this->onBufferFull = null;
     }
 
+    public static function getGracefulStop(){
+        return static::$_gracefulStop;
+    }
+
     public static function command(){
         if (Server::$_OS !== Server::OS_TYPE_LINUX ) {
             return;
@@ -196,7 +201,7 @@ class Server {
         }
     }
 
-    public static function init()
+    public static function daemonize()
     {
 		$pid = pcntl_fork();
 		if ($pid == -1) {

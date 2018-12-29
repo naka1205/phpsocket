@@ -625,7 +625,7 @@ class Connection
             }
 
             if(0 === self::$statistics['connection_count']) {
-                Server::stopAll();
+                Server::stop();
             }
         }
     }
