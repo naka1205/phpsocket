@@ -441,7 +441,7 @@ class Connection
 
         // Hidden error.
         set_error_handler(function($errno, $errstr, $file){
-            if (!Server::$daemonize) {
+            if (!Server::$_daemonize) {
                 Server::console("SSL handshake error: $errstr \n");
             }
         });

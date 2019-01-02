@@ -5,7 +5,7 @@ use Naka507\Socket\Server;
 $server = new Server();
 
 //服务启动
-$server->onWorkerStart = function($connection)
+$server->onWorkerStart = function($worker)
 {
     echo "New onWorkerStart\n";
 };

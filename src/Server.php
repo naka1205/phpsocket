@@ -26,9 +26,10 @@ class Server {
 
     protected $_socket = null;
     protected $_pause = true;
+    protected $_context = [];
     
 
-	function __construct($port = 8000) {
+	function __construct($port = 8000, $option = array()) {
         Server::init();
         Http::init();
 		$this->port = $port;
@@ -45,6 +46,7 @@ class Server {
             Server::$_OS = Server::OS_TYPE_WINDOWS;
         }
 
+        $this->_context = stream_context_create($option);
 	}
 
 	public function start(){
@@ -53,11 +55,16 @@ class Server {
 
 		$local_socket = "tcp://0.0.0.0:".$this->port;
         
+        $flags = STREAM_SERVER_BIND | STREAM_SERVER_LISTEN;
 		$errno = 0;
 		$errmsg = '';
-		$this->_socket = stream_socket_server($local_socket, $errno, $errmsg);
+		$this->_socket = stream_socket_server($local_socket, $errno, $errmsg, $flags,$this->_context);
 		if (!$this->_socket) {
 			throw new Exception($errmsg);
+        }
+
+        if ($this->transport === 'ssl') {
+            stream_socket_enable_crypto($this->_socket, false);
         }
 
 		stream_set_blocking($this->_socket, 0);
@@ -197,6 +204,7 @@ class Server {
                 exit(0);
                 break;
             case '-d':
+                Server::$_daemonize = true;
                 Server::console("Start success.Input \"php $argv[0] -s\" to stop.\n");
                 Server::daemonize();
                 break;
@@ -242,7 +250,7 @@ class Server {
     public static function log($msg)
     {
         $msg = $msg . "\n";
-        if (!Server::$daemonize) {
+        if (!Server::$_daemonize) {
             Server::console($msg);
         }
         file_put_contents((string)Server::$logFile, date('Y-m-d H:i:s') . ' ' . 'pid:'
